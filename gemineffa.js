@@ -53,19 +53,19 @@ client.on('ready', () => {
     console.log(`The bot is online! Logged in as ${client.user.tag}`);
 
     const activities = [
-        { name: 'Genshin Impact', type: ActivityType.Streaming, url: `${process.env.ACTIVITY_URL}`, state: 'Assisting travelers across Teyvat...'},
-        { name: 'Maid Duties', type: ActivityType.Playing, state: 'Polishing furniture, sweeping floors and dusting...'},
-        { name: 'Cook-offs!', type: ActivityType.Competing, state: 'Prepping meals and serving food with flair!'},
-        { name: 'Household Maintenence', type: ActivityType.Watching, state: 'Repairing damages, maintaining tools and checking for safety hazards...'},
-        { name: 'Schedules', type: ActivityType.Watching, state: 'Keeping track of tasks, appointments and routines...'},
+        { name: 'Playing Genshin Impact', type: ActivityType.Streaming, url: `${process.env.ACTIVITY_URL}`, state: 'Assisting travelers across Teyvat...'},
+        { name: 'Performing Maid Duties', type: ActivityType.Playing, state: 'Polishing furniture, sweeping floors and dusting...'},
+        { name: 'Competing in Cook-offs!', type: ActivityType.Competing, state: 'Prepping meals and serving food with flair!'},
+        { name: 'Performing Household Maintenence', type: ActivityType.Watching, state: 'Repairing damages, maintaining tools and checking for safety hazards...'},
+        { name: 'Tracking Schedules', type: ActivityType.Watching, state: 'Keeping track of tasks, appointments and routines...'},
         { name: 'Caretaking', type: ActivityType.Playing, state: 'Assisting with daily needs, carrying supplies and aiding with physical tasks...'},
-        { name: 'Battle Comms', type: ActivityType.Listening, state: 'generating protective barriers for allies...'},
-        { name: 'with Lunar-Charged', type: ActivityType.Playing, state: 'Amplifying damage...'},
-        { name: 'Support Role', type: ActivityType.Playing, state: 'Assisting teammates with off-field lunar-charged reactions...'},
-        { name: 'Birgitta Unit', type: ActivityType.Watching, state: 'Summoning auxillary mechanical support for combat...'},
-        { name: 'Directives', type: ActivityType.Listening, state: 'Delivering information methodically...'},
-        { name: 'and Observing', type: ActivityType.Watching, state: 'Monitoring surroundings, scanning for anomalies and delivering situational updates...'},
-        { name: `with ${process.env.CREATOR_NAME}`, type: ActivityType.Playing, state: 'Supporting family with quiet reliability...'},
+        { name: 'Listening to Battle Comms', type: ActivityType.Listening, state: 'generating protective barriers for allies...'},
+        { name: 'Protecting with Lunar-Charged', type: ActivityType.Playing, state: 'Amplifying damage...'},
+        { name: 'Playing a Support Role', type: ActivityType.Playing, state: 'Assisting teammates with off-field lunar-charged reactions...'},
+        { name: 'Maintaining Birgitta Unit', type: ActivityType.Watching, state: 'Summoning auxillary mechanical support for combat...'},
+        { name: 'Noting Directives', type: ActivityType.Listening, state: 'Delivering information methodically...'},
+        { name: 'Watching and Observing', type: ActivityType.Watching, state: 'Monitoring surroundings, scanning for anomalies and delivering situational updates...'},
+        { name: `Looking after ${process.env.CREATOR_NAME}`, type: ActivityType.Playing, state: 'Supporting family with quiet reliability...'},
     ];
 
     client.user.setPresence({
