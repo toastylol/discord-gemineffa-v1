@@ -4,6 +4,7 @@ const path = require("path");
 
 const logPath = path.join(__dirname, '../logs.txt');
 
+// command module
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('log')
@@ -38,10 +39,13 @@ module.exports = {
             const recentLogs = logData.slice(-lines).join('\n');
 
             const dumpPath = path.join(process.cwd(), 'logs.txt');
-            const header = `=== Ineffa Log Dump ===\nRequested by: ${interaction.user.tag} (${interaction.user.id})\nTimestamp: ${new Date().toLocaleString()}\n\n`;
-            const footer = `\n\n=== End of Log Dump ===`;
+            const header = `\n\n=== Ineffa Log Dump ===\nRequested by: ${interaction.user.tag} (${interaction.user.id})\nTimestamp: ${new Date().toLocaleString()}\n\n`;
+            const footer = `\n\n=== End of Log Dump ===\n`;
 
-            fs.appendFileSync(dumpPath, header + recentLogs + footer, "utf8");
+            fs.appendFileSync(dumpPath, header, "utf8");
+            fs.appendFileSync(dumpPath, recentLogs + "\n", "utf8");
+            await new Promise(resolve => setImmediate(resolve));
+            fs.appendFileSync(dumpPath, footer + "\n", "utf8");
 
             await interaction.editReply({
                 content: `Log dump created with the last ${lines} lines.`,
