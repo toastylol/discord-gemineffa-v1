@@ -95,6 +95,12 @@ function formatDuration(ms) {
   	return parts.join("");
 }
 
+function shutdown() {
+    if (activityInterval) clearInterval(activityInterval);
+    console.log("Shutting ineffa down...");
+    client.destroy();
+    process.exit(0);
+}
 
 module.exports = {
     splitMessage,
@@ -102,5 +108,6 @@ module.exports = {
     writeTimestamps,
     detectKeyType,
     getFileType,
-    formatDuration
+    formatDuration,
+    shutdown
 };
