@@ -2,12 +2,32 @@ require('dotenv/config');
 
 const fs = require('fs');
 const path = require('path');
-const { splitMessage } = require('./utils.js');
+
+const logPath = path.join(__dirname, 'logs.txt');
+const logStream = fs.createWriteStream(logPath, {flags: 'a' }); //appends logs to file
+
+const consoleLogs = console.log;
+const consoleErrors = console.error;
+
+console.log = (...args) => {
+    const line = `[${new Date().toLocaleString()}] [LOG] ${args.join(' ')}\n`;
+    logStream.write(line);
+    consoleLogs(...args);
+};
+
+console.error = (...args) => {
+    const line = `[${new Date().toLocaleString()}] [ERROR] ${args.join(' ')}\n`;
+    logStream.write(line);
+    consoleErrors(...args);
+};
+
+const { splitMessage, shutdown } = require('./utils.js');
 const { Client, Collection, IntentsBitField, EmbedBuilder, ActivityType, PermissionsBitField, AutoModerationRuleEventType, AutoModerationRuleTriggerType, AutoModerationActionType } = require('discord.js');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const timestampsFilePath = './command_timestamps.json';
 
+// client initialization
 const client = new Client({
     intents: [
         IntentsBitField.Flags.Guilds,
@@ -20,6 +40,8 @@ const client = new Client({
 });
 
 client.conversationFetchLimit = 20;
+
+// command file loader
 client.commands = new Collection();
 const commandsPath = path.join(__dirname, 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
@@ -35,6 +57,7 @@ for (const file of commandFiles) {
     }
 }
 
+// gemini model initialization
 const genAI = new GoogleGenerativeAI(process.env.API_KEY);
 const flashModel = genAI.getGenerativeModel({ 
     model: "gemini-2.5-flash",
@@ -49,6 +72,7 @@ client.genAI = genAI;
 client.flashModel = flashModel;
 client.proModel = proModel;
 
+// turning on the bot
 client.on('ready', () => {
     console.log(`The bot is online! Logged in as ${client.user.tag}`);
 
@@ -82,9 +106,10 @@ client.on('ready', () => {
             activities: [newActivity],
             status: 'online',
        });
-    }, 60000);
+    }, 60000); // cycles b/w activities every minute
 });
 
+// message handling
 client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
     if (message.mentions.everyone) return;
@@ -122,9 +147,14 @@ client.on('messageCreate', async (message) => {
 
         const result = await chat.sendMessage(currentMessageContent);
         const response = result.response;
-        const text = response.text();
+        let text = result.response.text();
 
-        if (text) {
+        text = text.replace(/(?<=^|\n)(tool_code | thought)[\s\S]*?(?=\n\n|$)/gi, '');
+        text = text.replace(/\n{3,}/g, '\n\n').trim();
+
+        if (!text) return; 
+        
+        else {
             const messageChunks = splitMessage(text);
             let i = 0;
             try {
@@ -138,9 +168,9 @@ client.on('messageCreate', async (message) => {
                 } catch (err) {
                     if (err.code === 50035) {
                             console.log(`:x: Reply failed: Original message sent at ${message.createdAt.toLocaleString()}, was deleted.`, err);
-                        } else {
+                    } else {
                             console.error(`An error occurred while sending chunk ${i}`, err);
-                        }
+                    }
                 }
             }
     } catch (error) {
@@ -151,6 +181,7 @@ client.on('messageCreate', async (message) => {
     }
 });
 
+// interaction command handling
 client.on('interactionCreate', async interaction => {
     if (!interaction.isChatInputCommand()) return;
 
@@ -167,8 +198,14 @@ client.on('interactionCreate', async interaction => {
     }
 });
 
+// automod event handling
 client.on('autoModerationActionExecution', async (execution) => {
     console.log(`AutoMod rule triggered by ${execution.user.tag} in #${execution.channel.name}. Action: ${execution.action.type}.`);
 });
 
+// shutdown handling
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
+
+// bot login
 client.login(process.env.TOKEN);
