@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
+// command module
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('search')

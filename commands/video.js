@@ -1,6 +1,9 @@
+// video generation is not supported with ai studio keys at this moment. it requires a vertex key and is an api limitation.
+
 const { SlashCommandBuilder } = require('discord.js');
 const { detectKeyType } = require('../utils');
 
+// command module
 async function generateVideo(prompt) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/veo-3.0-generate-preview:generateVideo?key=${process.env.API_KEY}`;
 

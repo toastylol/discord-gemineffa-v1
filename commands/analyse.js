@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { getFileType } = require("../utils");
 
+// file fetcher and encoder
 async function fetchAndEncodeFile(url) {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`Failed to fetch file: ${res.statusText}`);
@@ -8,6 +9,7 @@ async function fetchAndEncodeFile(url) {
     return Buffer.from(buffer).toString("base64");
 }
 
+// command module
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('analyse')
@@ -50,6 +52,7 @@ module.exports = {
                 remaining = remaining.substring(4096);
             }
             
+            // embedded response
             const embeds = chunks.map((chunk, index) => {
                 const embed = new EmbedBuilder()
                     .setColor('Random')
@@ -57,7 +60,7 @@ module.exports = {
                     
                 if (index === 0) {
                     embed.setTitle(`Analysis of ${file.name}`)
-                         .setFooter({ text: "Analysis powered by Ineffa using Google." })
+                         .setFooter({ text: "Analysis powered by Ineffa using Gemini." })
                          .setTimestamp()
                          
                     if (getFileType(file) === "image") {

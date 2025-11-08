@@ -6,6 +6,7 @@ const {
     AutoModerationActionType 
 } = require('discord.js');
 
+// command module
 module.exports = {
     data: new SlashCommandBuilder() 
         .setName('automod-create')
@@ -28,7 +29,7 @@ module.exports = {
                         .setDescription('The maximum number of unique mentions allowed per message.')
                         .setRequired(true)
                         .setMinValue(1)
-                        .setMaxValue(50))),
+                        .setMaxValue(50))), // discord's limit is 50
 
         async execute(interaction) {
             try {

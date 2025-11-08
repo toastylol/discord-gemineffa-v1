@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder} = require('discord.js');
 const { formatDuration } = require('../utils.js');
 
+// command module
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('uptime')

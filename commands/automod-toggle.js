@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, PermissionsBitField } = require('discord.js');
 
+// command module
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('automod-toggle')

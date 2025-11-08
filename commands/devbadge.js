@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { readTimestamps, writeTimestamps } = require('../utils.js');
 
+// command module
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('devbadge')

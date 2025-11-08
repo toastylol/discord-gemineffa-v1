@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js');
 
+// command module
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('setlimit')
@@ -9,7 +10,7 @@ module.exports = {
                 .setDescription('The number of past messages to fetch for context (1-100).')
                 .setRequired(true)
                 .setMinValue(1)
-                .setMaxValue(100)),
+                .setMaxValue(100)), // max limit allowed by discord
     
     async execute(interaction) {
         if (interaction.user.id !== process.env.ADMIN_USER_ID) {

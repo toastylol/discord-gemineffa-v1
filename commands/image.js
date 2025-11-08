@@ -1,8 +1,11 @@
+// image generation is not supported with ai studio keys at this moment. it requires a vertex key and is an api limitation.
+
 const { SlashCommandBuilder } = require('discord.js');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const genAI = new GoogleGenerativeAI(process.env.API_KEY);
 
+// command module
 async function generateImage(prompt) {
     try {
         const imageModel = genAI.getGenerativeModel({
