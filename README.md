@@ -2,7 +2,7 @@
 
 [![ineffa icon](https://i.postimg.cc/8CDJfCWV/b8c79e2838c9968b8ef285ee06459711-Original.jpg)]
  
-ineffa is a versatile, ai-powered Discord bot based on the character, ineffa from genshin impact; designed to assist with server moderation, provide information, and engage with users through conversation, it is built with node.js, discord.js, and powered by the google gemini api.
+ineffa is a versatile, ai-powered discord bot based on the character, ineffa from genshin impact; designed to assist with server moderation, provide information, and engage with users through conversation, it is built with node.js, discord.js, and powered by the google gemini api.
  
 ---  
 
@@ -11,7 +11,7 @@ ineffa is a versatile, ai-powered Discord bot based on the character, ineffa fro
 * **conversational ai**: engage in natural conversation by mentioning (`@Ineffa`) the bot. it maintains conversation history for context.  
 * **web search**: get summarized answers to questions about current events using the `/search` command, powered by gemini's built-in google search.  
 * **file analysis**: analyze uploaded files (images, documents, etc.) by providing a task with the `/analyse` command.
-* **autoMod management**:  
+* **automod management**:  
     * dynamically create automod rules for keyword filtering and mention spam with `/automod-create`.  
     * enable or disable all server automod rules at once with `/automod-toggle`.  
 * **admin tools**: secure admin-only commands, such as 
@@ -28,7 +28,7 @@ ineffa is a versatile, ai-powered Discord bot based on the character, ineffa fro
 * a discord bot application with a token  
 * api keys for google gemini  
   
-### installation Steps
+### installation steps
   
 1.  **clone the repository:**  
     ```bash  
@@ -90,9 +90,9 @@ ineffa is a versatile, ai-powered Discord bot based on the character, ineffa fro
 -   `/automod-toggle [status]`: enables or disables all automod rules.
 -   `/devbadge`: an easy command to obtain the discord developer badge.
 -   `/log [lines]`: dumps ineffa's logs into a file in your root directory.
--   `/image [prompt]`: generates images based on your prompt.
+-   `/image [prompt]`: generates images based on your prompt. (requires vertex ai key or access api directly through rest or the sdk)
 -   `/ping`: shows the bot's current ping.
 -   `/search [query]`: searches the web for information.  
 -   `/setlimit [limit]`: (admin only) sets the message history limit for conversations.
 -   `/uptime`: shows how long the bot has been online.  
--   `/video [prompt]`: generates videos based on your prompt.
+-   `/video [prompt]`: generates videos based on your prompt. (requires vertex ai key)
