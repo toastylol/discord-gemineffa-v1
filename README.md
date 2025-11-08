@@ -90,9 +90,11 @@ ineffa is a versatile, ai-powered discord bot based on the character, ineffa fro
 -   `/automod-toggle [status]`: enables or disables all automod rules.
 -   `/devbadge`: an easy command to obtain the discord developer badge.
 -   `/log [lines]`: dumps ineffa's logs into a file in your root directory.
--   `/image [prompt]`: generates images based on your prompt. (requires vertex ai key or access api directly through rest or the sdk)
+-   `/image [prompt]`: generates images based on your prompt. 
+> (requires vertex ai key or access api directly through rest or the sdk)
 -   `/ping`: shows the bot's current ping.
 -   `/search [query]`: searches the web for information.  
 -   `/setlimit [limit]`: (admin only) sets the message history limit for conversations.
 -   `/uptime`: shows how long the bot has been online.  
--   `/video [prompt]`: generates videos based on your prompt. (requires vertex ai key)
+-   `/video [prompt]`: generates videos based on your prompt.
+> (requires vertex ai key)
