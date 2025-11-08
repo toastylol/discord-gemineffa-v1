@@ -179,6 +179,14 @@ client.on('messageCreate', async (message) => {
             message.reply("Apologies. An error occured while processing your request. Ineffa will attempt recovery if you wish to retry.").catch(err => console.error(":x: Failed to send error message:", err));
         }
     }
+
+    setInterval(() => {
+        const ping = client.ws.ping;
+        console.log(`[HEARTBEAT] Ping: ${ping}ms at ${new Date().toLocaleString()}`);
+        if (ping > 1000) {
+            console.log(`[WARNING] High ping detected (${ping}ms).`);
+        }
+    }, 300000); // 5 min interval between heartbeats
 });
 
 // interaction command handling
