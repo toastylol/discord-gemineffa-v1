@@ -25,7 +25,7 @@ If applicable, add screenshots to help explain your problem.
 
 **Discord (please complete the following information):**
  - Version: [e.g. 305.0]
- - Release Channel[e.g. Stable]
+ - Release Channel: [e.g. Stable]
 
 **Additional context**
 Add any other context about the problem here.
