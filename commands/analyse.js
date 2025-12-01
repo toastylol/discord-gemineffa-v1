@@ -9,7 +9,7 @@ async function fetchAndEncodeFile(url) {
     return Buffer.from(buffer).toString("base64");
 }
 
-// command module
+// command module 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('analyse')
