@@ -98,7 +98,7 @@ client.on('ready', () => {
     });
 
     let activityIndex = 0;
-    setInterval(() => {
+    activityInterval = setInterval(() => {
        activityIndex = (activityIndex + 1) % activities.length;
        const newActivity = activities[activityIndex];
 
@@ -212,8 +212,8 @@ client.on('autoModerationActionExecution', async (execution) => {
 });
 
 // shutdown handling
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
+process.on('SIGINT', () => shutdown(client, activityInterval));
+process.on('SIGTERM', () => shutdown(client, activityInterval));
 
 // bot login
 client.login(process.env.TOKEN);

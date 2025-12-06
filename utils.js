@@ -95,7 +95,7 @@ function formatDuration(ms) {
   	return parts.join("");
 }
 
-function shutdown() {
+function shutdown(client, activityInterval) {
     if (activityInterval) clearInterval(activityInterval);
     console.log("Shutting ineffa down...");
     client.destroy();
