@@ -60,16 +60,9 @@ module.exports = {
                     
                 if (index === 0) {
                     embed.setTitle(`Analysis of ${file.name}`)
-                         .setFooter({ text: "Analysis powered by Ineffa using Gemini." })
-                         .setTimestamp()
                          
                     if (getFileType(file) === "image") {
                         embed.setImage(file.url);
-                    } else if (getFileType(file) === "video")  {
-                            interaction.followUp({
-                            content: `**Uploaded Video:** ${file.name}`, 
-                            files: [{ attachment: file.url, name: file.name }],
-                        });
                     } else {
                          embed.addFields({
                             name: 'Original File',
@@ -77,10 +70,29 @@ module.exports = {
                          });
                     }
                 }
+
+                if (index === chunks.length - 1) {
+                    embed.setFooter({ text: "Analysis powered by Ineffa using Gemini." })
+                         .setTimestamp();
+                }
+
                 return embed;
             });
             
            await interaction.editReply({ embeds: embeds.slice(0, 10) });
+           console.log(`[${interaction.id}] Analysis embeds sent.`);
+
+           if (getFileType(file) === "video") {
+                try {
+                    await interaction.followUp({
+                        content: `**Uploaded Video:** ${file.name}`,
+                        files: [{ attachment: file.url, name: file.name }],
+                    });
+                } catch (videoError) {
+                    console.error('Failed to send video followup:', videoError);
+                    await interaction.followUp({ content: 'The analysis was successful, but I was unable to re-upload the original video file.', ephemeral: true });
+                }
+            }
 
         } catch (error) {
             console.error("File analysis error:", error);
