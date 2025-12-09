@@ -25,6 +25,8 @@ const { splitMessage, shutdown } = require('./utils.js');
 const { Client, Collection, IntentsBitField, EmbedBuilder, ActivityType, PermissionsBitField, AutoModerationRuleEventType, AutoModerationRuleTriggerType, AutoModerationActionType } = require('discord.js');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
+let activityInterval;
+
 const timestampsFilePath = './command_timestamps.json';
 
 // client initialization
