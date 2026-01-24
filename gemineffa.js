@@ -123,6 +123,7 @@ client.on('ready', () => {
 client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
     if (message.mentions.everyone) return;
+    if (message.mentions.roles.size > 0) return;
     
     const shouldReply = message.mentions.has(client.user.id);
 
