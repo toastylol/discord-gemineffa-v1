@@ -2,6 +2,7 @@
 
 const { SlashCommandBuilder } = require('discord.js');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { detectKeyType } = require('../utils');
 
 const genAI = new GoogleGenerativeAI(process.env.API_KEY);
 
@@ -47,7 +48,14 @@ module.exports = {
 
                 const prompt = interaction.options.getString('prompt');
                 const imgBuffer = await generateImage(prompt);
+                const keyType = detectKeyType(process.env.API_KEY);
 
+                if (keyType !== "service-account") {
+                    await interaction.editReply(
+                        "Ineffa is monitoring the developent of image generation features and will integrate it as soon as it becomes accessible."
+                    );
+                    return;
+                }
                 if (imgBuffer) {
                     await interaction.editReply({
                         content: `Ineffa’s rendering of: *${prompt}*`,
