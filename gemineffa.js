@@ -170,6 +170,7 @@ client.on('messageCreate', async (message) => {
 
     if (!shouldReply) return;
 
+    let typingInterval = null;
     try {
         const fetchedMessages = await message.channel.messages.fetch({ limit: client.conversationFetchLimit });
         const allMessages = [...fetchedMessages.values()].reverse();
@@ -178,6 +179,10 @@ client.on('messageCreate', async (message) => {
         const activeUserNickname = message.author.username;
 
         const validHistory = buildTrimmedHistory(allMessages, 6, 2000);
+
+        // start typing indicator and keep it alive while we await the model
+        message.channel.sendTyping().catch(() => {});
+        typingInterval = setInterval(() => message.channel.sendTyping().catch(() => {}), 5000);
 
         const chat = flashModel.startChat({
             history: validHistory,
@@ -204,7 +209,10 @@ client.on('messageCreate', async (message) => {
         text = text.replace(/^(Ineffa|[\w\s]+):\s/i, '');
         text = text.replace(/\n{3,}/g, '\n\n').trim();
 
-        if (!text) return;
+        if (!text) {
+            if (typingInterval) { clearInterval(typingInterval); typingInterval = null; }
+            return;
+        }
 
         const messageChunks = splitMessage(text);
         for (let i = 0; i < messageChunks.length; i++) {
@@ -215,7 +223,10 @@ client.on('messageCreate', async (message) => {
             }
         }
 
+        if (typingInterval) { clearInterval(typingInterval); typingInterval = null; }
+
     } catch (error) {
+        if (typingInterval) { clearInterval(typingInterval); typingInterval = null; }
         console.error(":x: Error communicating with Gemini API:", error);
         message.reply("Apologies. An error occurred while processing your request. Ineffa will attempt recovery if you wish to retry.").catch(() => {});
     }
@@ -229,6 +240,9 @@ client.on('interactionCreate', async interaction => {
     if (!command) return;
 
     try {
+        if (!interaction.deferred && !interaction.replied) {
+            await interaction.deferReply().catch(() => {});
+        }
         await command.execute(interaction);
     } catch (error) {
         console.error(error);
