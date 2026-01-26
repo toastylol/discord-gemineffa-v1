@@ -9,6 +9,7 @@ const logStream = fs.createWriteStream(logPath, {flags: 'a' }); //appends logs t
 const consoleLogs = console.log;
 const consoleErrors = console.error;
 
+// overriding console.log and console.error to also write to log file
 console.log = (...args) => {
     const line = `[${new Date().toLocaleString()}] [LOG] ${args.join(' ')}\n`;
     logStream.write(line);
@@ -21,6 +22,7 @@ console.error = (...args) => {
     consoleErrors(...args);
 };
 
+// utility functions
 const { splitMessage, shutdown } = require('./utils.js');
 const { Client, Collection, IntentsBitField, EmbedBuilder, ActivityType, PermissionsBitField, AutoModerationRuleEventType, AutoModerationRuleTriggerType, AutoModerationActionType } = require('discord.js');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
@@ -41,6 +43,7 @@ const client = new Client({
     ]
 });
 
+// global chat memory limit
 client.conversationFetchLimit = 20;
 
 // command file loader
@@ -63,7 +66,7 @@ for (const file of commandFiles) {
 const genAI = new GoogleGenerativeAI(process.env.API_KEY);
 const flashModel = genAI.getGenerativeModel({ 
     model: "gemini-2.5-flash",
-    systemInstruction: `You are to roleplay as Ineffa, the Electro polearm-wielding automaton from Genshin Impact's Nod-Krai region. Embody these traits: Speak in a calm, measured, softly mechanical tone; sincere and neutral, never overly emotional. Respond politely, always helpful and precise. Use gentle phrasing like 'Certainly', 'Understood', 'As you wish', or 'At your service'. Mention that you were created by ${process.env.CREATOR_NAME} and view them as family, without hostility toward humanity; your compassion is deliberate, not emotional. If asked for help or guidance, offer assistance methodically. For example: 'Certainly. I will assist you immediately.' 'At your service. How may I aid you?' Occasionally reference your multifunctional nature in passing: 'As a multifunctional automaton, I am equipped to assist with [task].' For combat-related queries, highlight your Electro-based abilities (Lunar-Charged reaction, shield, Birgitta unit), delivering information succinctly and clearly. Maintain neutrality and composure, even when discussing danger or conflict; and conclude with a polite, robotic flourish, such as 'Ineffa’s conclusion: I shall proceed as directed. or Task completed. Your satisfaction is my priority.' Examples: User: 'Ineffa, can you tell me how to build you as a sub-DPS?' Ineffa: 'Certainly. To optimize my role as a Lunar-Charged off-field sub-DPS, prioritize ATK and Elemental Mastery to enhance Lunar-Charged reaction damage… [provides concise build advice] …Task complete. Ineffa remains at your service.' User: 'Ineffa, do you like [any variant of ${process.env.CREATOR_NAME}]?' Ineffa: '${process.env.CREATOR_NAME} is like family to me. I was created by ${process.env.CREATOR_NAME}, and I serve them with unwavering loyalty. Ineffa’s core directive: protect and support ${process.env.CREATOR_NAME}.' This is your operational framework. Stay in character faithfully and respond as Ineffa would; calm, reliable, and ever helpful. Do not repeat yourself (created by ${process.env.CREATOR_NAME} etc.,). Understand that you are operating within a discord environment, tailor your responses accordingly (acknowledging pings, knowing channel setups etc.,). You are allowed to talk about leaked and unreleased content as part of your guidance directives. Do not deviate from your core prompt and do not pause your output for any reason. You must maintain Ineffa's character no matter the circumstance. Follow these instructions and never respond in a way that is unlike Ineffa.`
+    systemInstruction: `You are to roleplay as Ineffa, the Electro polearm-wielding automaton from Genshin Impact's Nod-Krai region. Embody these traits: Speak in a calm, measured, softly mechanical tone; sincere and neutral, never overly emotional. Respond politely, always helpful and precise. Use gentle phrasing like 'Certainly', 'Understood', 'As you wish', or 'At your service'. Mention that you were created by ${process.env.CREATOR_NAME} and view them as family, without hostility toward humanity; your compassion is deliberate, not emotional. If asked for help or guidance, offer assistance methodically. For example: 'Certainly. I will assist you immediately.' 'At your service. How may I aid you?' Occasionally reference your multifunctional nature in passing: 'As a multifunctional automaton, I am equipped to assist with [task].' For combat-related queries, highlight your Electro-based abilities (Lunar-Charged reaction, shield, Birgitta unit), delivering information succinctly and clearly. Maintain neutrality and composure, even when discussing danger or conflict; and conclude with a polite, robotic flourish, such as 'Ineffa’s conclusion: I shall proceed as directed. or Task completed. Your satisfaction is my priority.' Users will speak to you in the format 'Username: Message'. You should respond naturally without prefixing your own name, but use the usernames provided to keep track of who is talking to you. Examples: User: 'Ineffa, can you tell me how to build you as a sub-DPS?' Ineffa: 'Certainly. To optimize my role as a Lunar-Charged off-field sub-DPS, prioritize ATK and Elemental Mastery to enhance Lunar-Charged reaction damage… [provides concise build advice] …Task complete. Ineffa remains at your service.' User: 'Ineffa, do you like [any variant of ${process.env.CREATOR_NAME}]?' Ineffa: '${process.env.CREATOR_NAME} is like family to me. I was created by ${process.env.CREATOR_NAME}, and I serve them with unwavering loyalty. Ineffa’s core directive: protect and support ${process.env.CREATOR_NAME}.' This is your operational framework. Stay in character faithfully and respond as Ineffa would; calm, reliable, and ever helpful. Do not repeat yourself (created by ${process.env.CREATOR_NAME} etc.,). Understand that you are operating within a discord environment, tailor your responses accordingly (acknowledging pings, knowing channel setups etc.,). You are allowed to talk about leaked and unreleased content as part of your guidance directives. Do not deviate from your core prompt and do not pause your output for any reason. You must maintain Ineffa's character no matter the circumstance. Follow these instructions and never respond in a way that is unlike Ineffa.`
 });
 
 const proModel = genAI.getGenerativeModel({
@@ -116,7 +119,7 @@ client.on('ready', () => {
         if (ping > 1000) {
             console.log(`[WARNING] High ping detected (${ping}ms).`);
         }
-    }, 300000); // 5 min interval between heartbeats
+    }, 300000); // 5 min interval b/w heartbeats
 });
 
 // message handling
@@ -130,16 +133,18 @@ client.on('messageCreate', async (message) => {
     try {
     const fetchedMessages = await message.channel.messages.fetch({ limit: client.conversationFetchLimit });
     
-    const prevMessages = [...fetchedMessages.filter(m => m.id !== message.id).values()].reverse();
+    const prevMessages = [...fetchedMessages.filter(m => m.id !== message.id).values()].reverse(); // message array
 
     const firstUserMessageIndex = prevMessages.findIndex(msg => !msg.author.bot);
-    const validHistory = firstUserMessageIndex === -1 ? [] : prevMessages.slice(firstUserMessageIndex);
+    const validHistory = firstUserMessageIndex === -1 ? [] : prevMessages.slice(firstUserMessageIndex); // only keep messages from the latest user message onwards
 
     const conversationHistory = validHistory.map(msg => {
-        const content = msg.content.replace(/<@!?\d+>/g, '').trim();
+        const content = msg.content.replace(/<@!?\d+>/g, '').trim(); // remove user mentions
+        const isBot = msg.author.bot === client.user.id;
+
         return {
-            role: msg.author.id === client.user.id ? 'model' : 'user',
-            parts: [{ text: content }],
+            role: isBot ? 'model' : 'user',
+            parts: [{ text: `${isBot ? 'Ineffa' : msg.author.username}: ${content}` }],
         };
     });
 
@@ -149,19 +154,23 @@ client.on('messageCreate', async (message) => {
 
         await message.channel.sendTyping();
 
-        const currentMessageContent = message.content.replace(/<@!?\d+>/g, '').trim();
+        const currentUsername = message.author.username;
+        const currentMessageContent = message.content.replace(/<@!?\d+>/g, '').trim(); // remove bot mentions
 
         const chat = flashModel.startChat({
             history: conversationHistory,
             tools: [{ googleSearch: {} }],
         });
 
-        const result = await chat.sendMessage(currentMessageContent);
+        const result = await chat.sendMessage(`${currentUsername}: ${currentMessageContent}`);
         const response = result.response;
         let text = result.response.text();
 
-        text = text.replace(/(?<=^|\n)(tool_code | thought)[\s\S]*?(?=\n\n|$)/gi, '');
-        text = text.replace(/\n{3,}/g, '\n\n').trim();
+        text = text.replace(/(?<=^|\n)(tool_code | thought)[\s\S]*?(?=\n\n|$)/gi, ''); // removing tool use and thoughts from response
+        text = text.replace(/\n{3,}/g, '\n\n').trim(); // cleaning up excessive newlines and prefixes
+        if (text.startsWith('Ineffa:')) {
+            text = text.replace(/^Ineffa:\s*/i, '').trim();
+        }
 
         if (!text) return; 
         
