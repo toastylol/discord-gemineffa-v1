@@ -239,16 +239,32 @@ client.on('interactionCreate', async interaction => {
     const command = client.commands.get(interaction.commandName)
     if (!command) return;
 
+    // Delay automatic defer so quick commands that reply immediately are not double-deferred.
+    const DEFER_DELAY_MS = 750;
+    let deferTimer = null;
     try {
-        if (!interaction.deferred && !interaction.replied) {
-            await interaction.deferReply().catch(() => {});
-        }
+        deferTimer = setTimeout(async () => {
+            if (!interaction.deferred && !interaction.replied) {
+                await interaction.deferReply().catch(() => {});
+            }
+        }, DEFER_DELAY_MS);
+
         await command.execute(interaction);
     } catch (error) {
         console.error(error);
-        if (interaction.replied || interaction.deferred) {
-            await interaction.reply({ content: 'There was an error while executing this command.', ephemeral: true });
+        try {
+            if (!interaction.deferred && !interaction.replied) {
+                await interaction.reply({ content: 'There was an error while executing this command.', ephemeral: true });
+            } else if (interaction.deferred && !interaction.replied) {
+                await interaction.editReply({ content: 'There was an error while executing this command.', ephemeral: true }).catch(() => {});
+            } else {
+                await interaction.followUp({ content: 'There was an error while executing this command.', ephemeral: true }).catch(() => {});
+            }
+        } catch (replyError) {
+            console.error('Failed to send error response to interaction:', replyError);
         }
+    } finally {
+        if (deferTimer) { clearTimeout(deferTimer); deferTimer = null; }
     }
 });
 
