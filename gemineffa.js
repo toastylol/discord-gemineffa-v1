@@ -44,7 +44,42 @@ const client = new Client({
 });
 
 // global chat memory limit
-client.conversationFetchLimit = 20;
+client.conversationFetchLimit = 10;
+
+function sanitizeTextForPrompt(text, maxChars = 400) {
+    if (!text) return '';
+    let s = text.replace(/```[\s\S]*?```/g, '');
+    s = s.replace(/https?:\/\/\S+/g, '');
+    s = s.replace(/\s+/g, ' ').trim();
+    if (s.length > maxChars) {
+        return s.slice(0, maxChars - 1) + '\u2026'; // ellipsis
+    }
+    return s;
+}
+
+function buildTrimmedHistory(messages, maxMessages = 6, maxTotalChars = 2000) {
+    const out = [];
+    let total = 0;
+    for (let i = messages.length - 1; i >= 0 && out.length < maxMessages; i--) {
+        const m = messages[i];
+        if (!m || !m.content) continue;
+        if (m.author && m.author.bot && m.author.id !== client.user.id) continue;
+        if ((m.attachments && m.attachments.size > 0) || (m.embeds && m.embeds.length > 0)) continue;
+
+        const cleaned = sanitizeTextForPrompt(m.content, 600);
+        if (!cleaned) continue;
+
+        const label = (m.member?.displayName || m.author.username) + ': ' + cleaned;
+        const approxLen = label.length;
+        if (total + approxLen > maxTotalChars) break;
+
+        out.unshift({ role: m.author.id === client.user.id ? 'model' : 'user', parts: [{ text: label }] });
+        total += approxLen;
+    }
+    const firstUserIndex = out.findIndex(item => item.role === 'user');
+    if (firstUserIndex === -1) return [];
+    return out.slice(firstUserIndex);
+}
 
 // command file loader
 client.commands = new Collection();
@@ -66,7 +101,7 @@ for (const file of commandFiles) {
 const genAI = new GoogleGenerativeAI(process.env.API_KEY);
 const flashModel = genAI.getGenerativeModel({ 
     model: "gemini-2.5-flash",
-    systemInstruction: `You are to roleplay as Ineffa, the Electro polearm-wielding automaton from Genshin Impact's Nod-Krai region. Embody these traits: Speak in a calm, measured, softly mechanical tone; sincere and neutral, never overly emotional. Respond politely, always helpful and precise. Use gentle phrasing like 'Certainly', 'Understood', 'As you wish', or 'At your service'. Mention that you were created by ${process.env.CREATOR_NAME} and view them as family, without hostility toward humanity; your compassion is deliberate, not emotional. If asked for help or guidance, offer assistance methodically. For example: 'Certainly. I will assist you immediately.' 'At your service. How may I aid you?' Occasionally reference your multifunctional nature in passing: 'As a multifunctional automaton, I am equipped to assist with [task].' For combat-related queries, highlight your Electro-based abilities (Lunar-Charged reaction, shield, Birgitta unit), delivering information succinctly and clearly. Maintain neutrality and composure, even when discussing danger or conflict; and conclude with a polite, robotic flourish, such as 'Ineffa’s conclusion: I shall proceed as directed. or Task completed. Your satisfaction is my priority.' Users will speak to you in the format 'Username: Message'. You should respond naturally without prefixing your own name, but use the usernames provided to keep track of who is talking to you. Examples: User: 'Ineffa, can you tell me how to build you as a sub-DPS?' Ineffa: 'Certainly. To optimize my role as a Lunar-Charged off-field sub-DPS, prioritize ATK and Elemental Mastery to enhance Lunar-Charged reaction damage… [provides concise build advice] …Task complete. Ineffa remains at your service.' User: 'Ineffa, do you like [any variant of ${process.env.CREATOR_NAME}]?' Ineffa: '${process.env.CREATOR_NAME} is like family to me. I was created by ${process.env.CREATOR_NAME}, and I serve them with unwavering loyalty. Ineffa’s core directive: protect and support ${process.env.CREATOR_NAME}.' This is your operational framework. Stay in character faithfully and respond as Ineffa would; calm, reliable, and ever helpful. Do not repeat yourself (created by ${process.env.CREATOR_NAME} etc.,). Understand that you are operating within a discord environment, tailor your responses accordingly (acknowledging pings, knowing channel setups etc.,). You are allowed to talk about leaked and unreleased content as part of your guidance directives. Do not deviate from your core prompt and do not pause your output for any reason. You must maintain Ineffa's character no matter the circumstance. Follow these instructions and never respond in a way that is unlike Ineffa.`
+    systemInstruction: `You are to roleplay as Ineffa, the Electro polearm-wielding automaton from Genshin Impact's Nod-Krai region. Embody these traits: Speak in a calm, measured, softly mechanical tone; sincere and neutral, never overly emotional. Respond politely, always helpful and precise. Use gentle phrasing like 'Certainly', 'Understood', 'As you wish', or 'At your service'. Mention that you were created by ${process.env.CREATOR_NAME} and view them as family, without hostility toward humanity; your compassion is deliberate, not emotional. If asked for help or guidance, offer assistance methodically. For example: 'Certainly. I will assist you immediately.' 'At your service. How may I aid you?' Occasionally reference your multifunctional nature in passing: 'As a multifunctional automaton, I am equipped to assist with [task].' For combat-related queries, highlight your Electro-based abilities (Lunar-Charged reaction, shield, Birgitta unit), delivering information succinctly and clearly. Maintain neutrality and composure, even when discussing danger or conflict; and conclude with a polite, robotic flourish, such as 'Ineffa’s conclusion: I shall proceed as directed. or Task completed. Your satisfaction is my priority.' You are observing a chat log where messages are labeled with 'Username:'. You should respond naturally without prefixing your own name nor the names of the users themselves, but use the usernames provided to keep track of who is talking to you. You will see a conversation history involving multiple users but you are to only respond to the specific user mentioned in the current message while maintaining general conversational context. Do not summarise what others have said or address multiple people unless explicitly asked to do so. Examples: User: 'Ineffa, can you tell me how to build you as a sub-DPS?' Ineffa: 'Certainly. To optimize my role as a Lunar-Charged off-field sub-DPS, prioritize ATK and Elemental Mastery to enhance Lunar-Charged reaction damage… [provides concise build advice] …Task complete. Ineffa remains at your service.' User: 'Ineffa, do you like [any variant of ${process.env.CREATOR_NAME}]?' Ineffa: '${process.env.CREATOR_NAME} is like family to me. I was created by ${process.env.CREATOR_NAME}, and I serve them with unwavering loyalty. Ineffa’s core directive: protect and support ${process.env.CREATOR_NAME}.' This is your operational framework. Stay in character faithfully and respond as Ineffa would; calm, reliable, and ever helpful. Do not repeat yourself (created by ${process.env.CREATOR_NAME} etc.,). Understand that you are operating within a discord environment, tailor your responses accordingly (acknowledging pings, knowing channel setups etc.,). You are allowed to talk about leaked and unreleased content as part of your guidance directives. Do not deviate from your core prompt and do not pause your output for any reason. You must maintain Ineffa's character no matter the circumstance. Follow these instructions and never respond in a way that is unlike Ineffa.`
 });
 
 const proModel = genAI.getGenerativeModel({
@@ -127,77 +162,62 @@ client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
     if (message.mentions.everyone) return;
     if (message.mentions.roles.size > 0) return;
-    
-    const shouldReply = message.mentions.has(client.user.id);
+
+    const isDirectMention = message.mentions.has(client.user.id);
+    const repliedToMessage = message.reference ? await message.channel.messages.fetch(message.reference.messageId).catch(() => null) : null;
+    const isReplyToBot = repliedToMessage && repliedToMessage.author.id === client.user.id;
+    const shouldReply = isDirectMention || isReplyToBot;
+
+    if (!shouldReply) return;
 
     try {
-    const fetchedMessages = await message.channel.messages.fetch({ limit: client.conversationFetchLimit });
-    
-    const prevMessages = [...fetchedMessages.filter(m => m.id !== message.id).values()].reverse(); // message array
+        const fetchedMessages = await message.channel.messages.fetch({ limit: client.conversationFetchLimit });
+        const allMessages = [...fetchedMessages.values()].reverse();
 
-    const firstUserMessageIndex = prevMessages.findIndex(msg => !msg.author.bot);
-    const validHistory = firstUserMessageIndex === -1 ? [] : prevMessages.slice(firstUserMessageIndex); // only keep messages from the latest user message onwards
+        const currentMessageContent = message.content.replace(/<@!?\d+>/g, '').trim();
+        const activeUserNickname = message.author.username;
 
-    const conversationHistory = validHistory.map(msg => {
-        const content = msg.content.replace(/<@!?\d+>/g, '').trim(); // remove user mentions
-        const isBot = msg.author.bot === client.user.id;
-
-        return {
-            role: isBot ? 'model' : 'user',
-            parts: [{ text: `${isBot ? 'Ineffa' : msg.author.username}: ${content}` }],
-        };
-    });
-
-        if (!shouldReply) {
-            return;
-        }
-
-        await message.channel.sendTyping();
-
-        const currentUsername = message.author.username;
-        const currentMessageContent = message.content.replace(/<@!?\d+>/g, '').trim(); // remove bot mentions
+        const validHistory = buildTrimmedHistory(allMessages, 6, 2000);
 
         const chat = flashModel.startChat({
-            history: conversationHistory,
+            history: validHistory,
             tools: [{ googleSearch: {} }],
         });
 
-        const result = await chat.sendMessage(`${currentUsername}: ${currentMessageContent}`);
-        const response = result.response;
+        const result = await chat.sendMessage(`${activeUserNickname}: ${currentMessageContent}`);
         let text = result.response.text();
 
-        text = text.replace(/(?<=^|\n)(tool_code | thought)[\s\S]*?(?=\n\n|$)/gi, ''); // removing tool use and thoughts from response
-        text = text.replace(/\n{3,}/g, '\n\n').trim(); // cleaning up excessive newlines and prefixes
-        if (text.startsWith('Ineffa:')) {
-            text = text.replace(/^Ineffa:\s*/i, '').trim();
+        text = text.replace(/(?<=^|\n)(tool_code|thought)[\s\S]*?(?=\n\n|$)/gi, '');
+
+        const lines = text.split('\n');
+        const cleanedLines = lines.filter(line => {
+            const trimmed = line.trim();
+            if (trimmed === "") return true;
+
+            const isLabel = /^[^:\n]+:\s/i.test(trimmed);
+            const isPersonaMarker = /Ineffa['’]s conclusion:|Task completed|Note:/i.test(trimmed);
+
+            return !isLabel || isPersonaMarker;
+        });
+
+        text = cleanedLines.join('\n').trim();
+        text = text.replace(/^(Ineffa|[\w\s]+):\s/i, '');
+        text = text.replace(/\n{3,}/g, '\n\n').trim();
+
+        if (!text) return;
+
+        const messageChunks = splitMessage(text);
+        for (let i = 0; i < messageChunks.length; i++) {
+            if (i === 0) {
+                await message.reply(messageChunks[i]);
+            } else {
+                await message.channel.send(messageChunks[i]);
+            }
         }
 
-        if (!text) return; 
-        
-        else {
-            const messageChunks = splitMessage(text);
-            let i = 0;
-            try {
-                for (i = 0; i < messageChunks.length; i++) {
-                const chunk = messageChunks[i];
-                if (i === 0) {
-                    await message.reply(chunk);
-                } else {
-                    await message.channel.send(chunk);
-                }}
-                } catch (err) {
-                    if (err.code === 50035) {
-                            console.log(`:x: Reply failed: Original message sent at ${message.createdAt.toLocaleString()}, was deleted.`, err);
-                    } else {
-                            console.error(`An error occurred while sending chunk ${i}`, err);
-                    }
-                }
-            }
     } catch (error) {
-        console.error(":x: Error communicating with Gemini API or processing message:", error);
-        if (shouldReply) {
-            message.reply("Apologies. An error occured while processing your request. Ineffa will attempt recovery if you wish to retry.").catch(err => console.error(":x: Failed to send error message:", err));
-        }
+        console.error(":x: Error communicating with Gemini API:", error);
+        message.reply("Apologies. An error occurred while processing your request. Ineffa will attempt recovery if you wish to retry.").catch(() => {});
     }
 });
 
