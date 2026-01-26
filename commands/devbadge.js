@@ -1,3 +1,4 @@
+// this command is deprecated as discord no longer offers the dev badge
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { readTimestamps, writeTimestamps } = require('../utils.js');
 
@@ -5,7 +6,7 @@ const { readTimestamps, writeTimestamps } = require('../utils.js');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('devbadge')
-        .setDescription('A command to claim the active dev badge.'),
+        .setDescription('A command to claim the active dev badge. (Deprecated)'),
         
     async execute(interaction) {
         try {
@@ -16,15 +17,15 @@ module.exports = {
                 const lastTimestamp = timestamps[userID];
         
                 const embed = new EmbedBuilder()
-                    .setColor('#20e620')
+                    .setColor('#e62020')
                     .setTitle('Active Developer Badge Eligibility')
-                    .setDescription('This command has been executed successfully. You should be eligible for the **Active Developer Badge** within 24 hours.')
+                    .setThumbnail(interaction.user.displayAvatarURL({ dynamic: true, size: 512 }))
+                    .setDescription('Discord no longer offers the Active Developer Badge program. This command is deprecated.')
                     .addFields({
-                        name: 'Next Steps',
-                        value: 'Visit the [claim page](https://discord.com/developers/active-developer) after 24 hours to claim your badge.'
+                        name: 'Want to know more?',
+                        value: 'Visit the [support page](https://support-dev.discord.com/hc/en-us/articles/10113997751447-Active-Developer-Badge).'
                     })
-                    .setTimestamp()
-                    .setFooter({ text: 'Eligibility Check' });
+                    .setTimestamp();
         
                 if (lastTimestamp) {
                     embed.addFields({
