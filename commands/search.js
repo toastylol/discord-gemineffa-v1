@@ -16,14 +16,18 @@ module.exports = {
             await interaction.deferReply();
 
             const query = interaction.options.getString('query');
+            const safeQuery = query.replace(/\s+/g, ' ').trim().slice(0, 500);
             const result = await flashModel.generateContent({
-                contents: [{ role: "user", parts: [{ text: query }] }],
+                contents: [{ role: "user", parts: [{ text: safeQuery }] }],
                 tools: [{
                     googleSearch: {},
                 }],
             });
             const response = result.response;
-            const text = response.text();
+            let text = response.text();
+            if (text.length > 1500) {
+                text = text.slice(0, 1500) + '\u2026';
+            }
 
             const embed = new EmbedBuilder()
                 .setColor("Random")

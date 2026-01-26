@@ -46,7 +46,8 @@ module.exports = {
         try {
                 await interaction.deferReply();
 
-                const prompt = interaction.options.getString('prompt');
+                const rawPrompt = interaction.options.getString('prompt');
+                const prompt = rawPrompt.replace(/\s+/g, ' ').trim().slice(0, 500);
                 const imgBuffer = await generateImage(prompt);
                 const keyType = detectKeyType(process.env.API_KEY);
 
