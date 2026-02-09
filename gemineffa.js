@@ -46,7 +46,7 @@ const client = new Client({
 // global chat memory limit
 client.conversationFetchLimit = 10;
 
-function sanitizeTextForPrompt(text, maxChars = 400) {
+function sanitizeText(text, maxChars = 400) {
     if (!text) return '';
     let s = text.replace(/```[\s\S]*?```/g, '');
     s = s.replace(/https?:\/\/\S+/g, '');
@@ -57,7 +57,7 @@ function sanitizeTextForPrompt(text, maxChars = 400) {
     return s;
 }
 
-function buildTrimmedHistory(messages, maxMessages = 6, maxTotalChars = 2000) {
+function trimmedHistory(messages, maxMessages = 6, maxTotalChars = 2000) {
     const out = [];
     let total = 0;
     for (let i = messages.length - 1; i >= 0 && out.length < maxMessages; i--) {
@@ -66,7 +66,7 @@ function buildTrimmedHistory(messages, maxMessages = 6, maxTotalChars = 2000) {
         if (m.author && m.author.bot && m.author.id !== client.user.id) continue;
         if ((m.attachments && m.attachments.size > 0) || (m.embeds && m.embeds.length > 0)) continue;
 
-        const cleaned = sanitizeTextForPrompt(m.content, 600);
+        const cleaned = sanitizeText(m.content, 600);
         if (!cleaned) continue;
 
         const label = (m.member?.displayName || m.author.username) + ': ' + cleaned;
@@ -123,7 +123,7 @@ client.on('ready', () => {
         { name: 'Performing Household Maintenence', type: ActivityType.Watching, state: 'Repairing damages, maintaining tools and checking for safety hazards...'},
         { name: 'Tracking Schedules', type: ActivityType.Watching, state: 'Keeping track of tasks, appointments and routines...'},
         { name: 'Caretaking', type: ActivityType.Playing, state: 'Assisting with daily needs, carrying supplies and aiding with physical tasks...'},
-        { name: 'Listening to Battle Comms', type: ActivityType.Listening, state: 'generating protective barriers for allies...'},
+        { name: 'Listening to Battle Comms', type: ActivityType.Listening, state: 'Generating protective barriers for allies...'},
         { name: 'Protecting with Lunar-Charged', type: ActivityType.Playing, state: 'Amplifying damage...'},
         { name: 'Playing a Support Role', type: ActivityType.Playing, state: 'Assisting teammates with off-field lunar-charged reactions...'},
         { name: 'Maintaining Birgitta Unit', type: ActivityType.Watching, state: 'Summoning auxillary mechanical support for combat...'},
@@ -178,7 +178,7 @@ client.on('messageCreate', async (message) => {
         const currentMessageContent = message.content.replace(/<@!?\d+>/g, '').trim();
         const activeUserNickname = message.author.username;
 
-        const validHistory = buildTrimmedHistory(allMessages, 6, 2000);
+        const validHistory = trimmedHistory(allMessages, 6, 2000);
 
         // start typing indicator and keep it alive while we await the model
         message.channel.sendTyping().catch(() => {});
@@ -239,7 +239,7 @@ client.on('interactionCreate', async interaction => {
     const command = client.commands.get(interaction.commandName)
     if (!command) return;
 
-    // Delay automatic defer so quick commands that reply immediately are not double-deferred.
+    // delay automatic defer so quick commands that reply immediately are not double-deferred.
     const DEFER_DELAY_MS = 750;
     let deferTimer = null;
     try {
