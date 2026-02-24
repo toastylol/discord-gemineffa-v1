@@ -1,0 +1,26 @@
+name: Deploy Ineffa to GCP
+
+on:
+    push:
+        branches: [ main ]
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Code
+              uses: actions/checkout@v4
+
+            - name: SSH and Deploy to GCP
+              uses: appleboy/ssh-action@v1.0.3
+              with:
+                host: ${{ secrets.GCP_IP }}
+                username: ${{ secrets.GCP_User }}
+                key: ${{ secrets.GCP_SSH_KEY }}
+                script: |
+                    cd $HOME/ineffa/discord-gemineffa-v1
+                    git fetch --all
+                    git reset --hard origin/main
+                    npm install --production
+                    pm2 startOrRestart ecosystem.config.js --update-env
+                    pm2 save
