@@ -1,4 +1,4 @@
-// pm2 ecosystem config file
+// pm2 ecosystem config file, make changes as needed
 
 module.exports = {
   apps: [{
