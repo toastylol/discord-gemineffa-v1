@@ -116,8 +116,13 @@ client.proModel = proModel;
 client.on('ready', () => {
     console.log(`The bot is online! Logged in as ${client.user.tag}`);
 
-    const activities = [
+    const activities = () => {
+        const serverCount = client.guilds.cache.size;
+        const memberCount = client.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0);
+
+        return [
         { name: 'Playing Genshin Impact', type: ActivityType.Streaming, url: `${process.env.ACTIVITY_URL}`, state: 'Assisting travelers across Teyvat...'},
+        { name: `Watching over ${serverCount} servers`, type: ActivityType.Watching, state: `Managing ${memberCount} members with precision and care...`},
         { name: 'Performing Maid Duties', type: ActivityType.Playing, state: 'Polishing furniture, sweeping floors and dusting...'},
         { name: 'Competing in Cook-offs!', type: ActivityType.Competing, state: 'Prepping meals and serving food with flair!'},
         { name: 'Performing Household Maintenence', type: ActivityType.Watching, state: 'Repairing damages, maintaining tools and checking for safety hazards...'},
@@ -130,19 +135,22 @@ client.on('ready', () => {
         { name: 'Noting Directives', type: ActivityType.Listening, state: 'Delivering information methodically...'},
         { name: 'Watching and Observing', type: ActivityType.Watching, state: 'Monitoring surroundings, scanning for anomalies and delivering situational updates...'},
         { name: `Looking after ${process.env.CREATOR_NAME}`, type: ActivityType.Playing, state: 'Supporting family with quiet reliability...'},
-    ];
+        ];
+    };
 
     client.user.setPresence({
-        activities: [activities[0]],
+        activities: [activities()[0]],
         status: 'online',
     });
 
     let activityIndex = 0;
     activityInterval = setInterval(() => {
-       activityIndex = (activityIndex + 1) % activities.length;
-       const newActivity = activities[activityIndex];
+        const currentActivities = activities();
 
-       client.user.setPresence({
+        activityIndex = (activityIndex + 1) % currentActivities.length;
+        const newActivity = currentActivities[activityIndex];
+
+        client.user.setPresence({
             activities: [newActivity],
             status: 'online',
        });
