@@ -1,4 +1,4 @@
-// pm2 ecosystem config file + comment test
+// pm2 ecosystem config file
 
 module.exports = {
   apps: [{
