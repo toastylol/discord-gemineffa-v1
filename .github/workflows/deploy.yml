@@ -1,5 +1,8 @@
 # deploy workflow to a gcp instance. will work with any other providers
 name: Deploy Ineffa to GCP
+permissions:
+  contents: read
+  pull-requests: write
 
 on:
     push:
