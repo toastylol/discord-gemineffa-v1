@@ -13,3 +13,5 @@ command_timestamps.json
 index.js~RF3137fab.TMP
 
 .DS_Store
+
+logs/
