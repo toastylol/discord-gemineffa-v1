@@ -98,6 +98,7 @@ for (const file of commandFiles) {
 }
 
 // gemini model initialization
+// chore: add rate limiting and better prompt injection prevention
 const genAI = new GoogleGenerativeAI(process.env.API_KEY);
 const flashModel = genAI.getGenerativeModel({ 
     model: "gemini-2.5-flash",
