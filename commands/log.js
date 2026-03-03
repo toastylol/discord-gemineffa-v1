@@ -1,3 +1,5 @@
+// chore: add logging granualarity for easier log viewing 
+
 const { SlashCommandBuilder } = require('discord.js');
 const fs = require("fs");
 const path = require("path");
