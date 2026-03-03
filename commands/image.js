@@ -51,6 +51,12 @@ module.exports = {
                 const imgBuffer = await generateImage(prompt);
                 const keyType = detectKeyType(process.env.API_KEY);
 
+                /*
+                 * the function checks whether the provided api key is a standard ai studio key or a more powerful vertex ai service account key.
+                 * image and video generation models are currently only available to vertex ai users.
+                 * this check ensures that ineffa doesn't try to use a feature that the user's api key doesn't support, preventing unnecessary errors and providing a clear message to the user.
+                 */
+                
                 if (keyType !== "service-account") {
                     await interaction.editReply(
                         "Ineffa is monitoring the developent of image generation features and will integrate it as soon as it becomes accessible."

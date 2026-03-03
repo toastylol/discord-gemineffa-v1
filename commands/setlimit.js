@@ -13,6 +13,12 @@ module.exports = {
                 .setMaxValue(100)), // max limit allowed by discord
     
     async execute(interaction) {
+        
+        /*
+         * this is another bot-admin-only command, so we check the user's id against `ADMIN_USER_ID` which prevents regular users from changing the bot's conversation history limit.
+         * the reply also tags the bot-admin in case a non-admin user tries to use it.
+         */
+        
         if (interaction.user.id !== process.env.ADMIN_USER_ID) {
             return interaction.reply(`Directive denied. You lack the necessary permissions to execute this command. Ineffa recommends contacting <@${process.env.ADMIN_USER_ID}> to use it.`);
         }

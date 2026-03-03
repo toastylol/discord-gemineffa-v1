@@ -16,6 +16,12 @@ module.exports = {
             await interaction.deferReply();
 
             const query = interaction.options.getString('query');
+            
+            /*
+             * removes extra whitespace from user's query and truncates it to a reasonable length.
+             * this helps prevent abuse and keeps the query focused.
+             */
+            
             const safeQuery = query.replace(/\s+/g, ' ').trim().slice(0, 500);
             const result = await flashModel.generateContent({
                 contents: [{ role: "user", parts: [{ text: safeQuery }] }],

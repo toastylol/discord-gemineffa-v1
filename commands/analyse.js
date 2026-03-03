@@ -1,7 +1,12 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { getFileType } = require("../utils");
 
-// file fetcher and encoder
+    /* 
+     * this async function fetches a file from a given url and encodes it into a base64 string.
+     * base64 encoding is necessary to embed the file data directly into the request sent to the gemini api, as the api expects the file content in this format.
+     * it first fetches the file, then reads the response body as an arraybuffer and finally converts this buffer into a base64 string.
+     */
+
 async function fetchAndEncodeFile(url) {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`Failed to fetch file: ${res.statusText}`);
@@ -45,6 +50,11 @@ module.exports = {
 
             const responseText = result.response.text();
 
+            /*
+             * the response from the ai model can be very long and discord embeds have a character limit of 4096 for the description field.
+             * to handle long responses, this splits the text into chunks of 4096 characters. then, each chunk will then be sent as a separate embed with a maximum of 10 embeds.
+             */
+
             const chunks = [];
             let remaining = responseText;
             while (remaining.length > 0) {
@@ -81,6 +91,11 @@ module.exports = {
             
            await interaction.editReply({ embeds: embeds.slice(0, 10) });
            console.log(`[${interaction.id}] Analysis embeds sent.`);
+
+            /*
+             * since discord doesn't natively embed video files from urls in the same way it does for images, we re-upload the video as a separate message.
+             * this ensures the user can see and play the video that was analyzed directly in the chat.
+             */
 
            if (getFileType(file) === "video") {
                 try {

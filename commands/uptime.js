@@ -17,6 +17,11 @@ module.exports = {
                 .setFooter({ text: "System Status Report." })
                 .setTimestamp();
 
+            /*
+             * this provides the bot's uptime in milliseconds.
+             * the `formatDuration` util function is used to convert this into a more readable format (e.g., "2d, 3h, 4m, 5s").
+             */
+
             await interaction.reply({ embeds: [embed] });
         },
 };

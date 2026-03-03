@@ -1,4 +1,7 @@
-// pm2 ecosystem config file, make changes as needed
+/*
+ * this is a config file for pm2, a process manager for node.js apps.
+ * pm2 helps keep ineffa running 24/7 by automatically restarting it if it crashes.
+ */
 
 module.exports = {
   apps: [{

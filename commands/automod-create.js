@@ -33,6 +33,13 @@ module.exports = {
 
         async execute(interaction) {
             try {
+                
+                /*
+                 * before this command does anything, perform a check to see if the user who used the command has the 'manage guild' permission.
+                 * this is a security check to ensure that only authorized users can create or modify automod rules. 
+                 * if they don't have the permission, ineffa sends an ephemeral message and stops command execution.
+                 */
+                
                 if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
                     return interaction.reply({
                         content: 'Directive denied. You lack the necessary permissions to configure AutoMod.',
@@ -46,6 +53,17 @@ module.exports = {
 
                 switch (subcommand) {
                     case 'keyword': {
+                        
+                        /*
+                         * this section handles the 'keyword' subcommand.
+                         * it splits the user-provided string of keywords into an array, trimming whitespace and removing any empty entries.
+                         * it checks if any valid keywords were provided and sends an error if not, if valid keywords are present, it creates an automod rule.
+                         * it's triggered when a message is sent (`messagesend` event).
+                         * the trigger type is `keyword`, which means it looks for specific words in messages.
+                         * the `keywordfilter` in `triggermetadata` is set to the array of keywords provided by the user.
+                         * if a message contains any of these keywords, the `blockmessage` action is taken and a custom message is sent to inform the user why their message was blocked.
+                         */
+
                         const keywords = interaction.options.getString('words').split(',').map(word =>
                         word.trim()).filter(Boolean);
 
@@ -71,6 +89,13 @@ module.exports = {
 
                     case 'mentionspam': {
                         const threshold = interaction.options.getInteger('threshold');
+
+                        /*
+                         * this creates an automod rule specifically for mention spam.
+                         * it's triggered when a message is sent.
+                         * the `mentionspam` trigger type activates when the number of unique user and role mentions in a single message exceeds the `mentionTotalLimit` (the threshold set by the user).
+                         * if triggered, it blocks the message and sends a custom explanation.
+                        */
 
                         await interaction.guild.autoModerationRules.create({
                             name: `Block Mention Spam (>${threshold}) - by ${interaction.client.user.username}`,

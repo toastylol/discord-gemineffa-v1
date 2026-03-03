@@ -7,6 +7,12 @@ const { detectKeyType } = require('../utils');
 async function generateVideo(prompt) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/veo-3.0-generate-preview:generateVideo?key=${process.env.API_KEY}`;
 
+    /*
+     * this function sends a request to the google generative language api to generate a video.
+     * the prompt, number of videos, and resolution are specified in the request body.
+     * if successful, returns the uri of the generated video.
+     */
+
     try {
         const response = await fetch(url, {
             method: "POST",
@@ -48,6 +54,12 @@ module.exports = {
                 const prompt = interaction.options.getString('prompt');
                 const keyType = detectKeyType(process.env.API_KEY);
 
+                /*
+                 * similar to image command, this checks api key type.
+                 * veo video generation model is only available with vertex ai service accounts.
+                 * this check ensures that ineffa doesn't try to use a feature that the user's api key doesn't support, preventing unnecessary errors and providing a clear message to the user.
+                 */
+                
                 if (keyType !== "service-account") {
                     await interaction.editReply(
                         "Ineffa is monitoring the developent of video generation features and will integrate it as soon as it becomes accessible."

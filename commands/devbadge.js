@@ -1,4 +1,9 @@
-// this command is deprecated as discord no longer offers the dev badge
+/*
+ * this command is deprecated as discord no longer offers the dev badge, it is kept for informational purposes.
+ * it informs users about the deprecation and provides a link to the official support page.
+ * it also demonstrates how to read and write timestamps to track when a user last used a command.
+ */
+
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { readTimestamps, writeTimestamps } = require('../utils.js');
 

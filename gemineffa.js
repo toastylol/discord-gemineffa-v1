@@ -22,6 +22,11 @@ console.error = (...args) => {
     consoleErrors(...args);
 };
 
+/*
+ * redirecting the standard console.log and console.error streams.
+ * this allows all log messages to be automatically saved to logs file while still appearing in the console as usual. keep a persistent record of bot activity.
+ */
+
 // utility functions
 const { splitMessage, shutdown } = require('./utils.js');
 const { Client, Collection, IntentsBitField, EmbedBuilder, ActivityType, PermissionsBitField, AutoModerationRuleEventType, AutoModerationRuleTriggerType, AutoModerationActionType } = require('discord.js');
@@ -46,8 +51,25 @@ const client = new Client({
 // global chat memory limit
 client.conversationFetchLimit = 10;
 
-function sanitizeText(text, maxChars = 400) {
+/*
+ * this function takes a piece of text and cleans it up for processing.
+ * it uses a few regex patterns to get the job done:
+ * 
+ * 1. /```[\s\S]*?```/g: this finds and removes any code blocks, which start and end with triple backticks.
+ *    the [\s\S]*? part matches any character (including newlines) in a non-greedy way.
+ * 
+ * 2. /https?:\/\/\S+/g: this finds and removes any urls (both http and https).
+ *    the \S+ part matches any non-whitespace character, so it grabs the whole url.
+ * 
+ * 3. /\s+/g: this finds any sequence of one or more whitespace characters (like spaces, tabs, or newlines) and replaces them with a single space.
+ * 
+ * this helps to normalize the spacing in the text.
+ * it also shortens the text if it's too long, adding an ellipsis (...) at the end.
+ */
+
+function fixText(text, maxChars = 400) {
     if (!text) return '';
+
     let s = text.replace(/```[\s\S]*?```/g, '');
     s = s.replace(/https?:\/\/\S+/g, '');
     s = s.replace(/\s+/g, ' ').trim();
@@ -57,7 +79,13 @@ function sanitizeText(text, maxChars = 400) {
     return s;
 }
 
-function trimmedHistory(messages, maxMessages = 6, maxTotalChars = 2000) {
+/*
+ * this function fixes text by removing code blocks, links, and extra spaces.
+ * it also truncates the text to a specified maximum number of characters to keep things tidy.
+ * the goal is to clean up user input before it's processed or logged.
+ */
+
+function trimHistory(messages, maxMessages = 6, maxTotalChars = 2000) {
     const out = [];
     let total = 0;
     for (let i = messages.length - 1; i >= 0 && out.length < maxMessages; i--) {
@@ -66,7 +94,7 @@ function trimmedHistory(messages, maxMessages = 6, maxTotalChars = 2000) {
         if (m.author && m.author.bot && m.author.id !== client.user.id) continue;
         if ((m.attachments && m.attachments.size > 0) || (m.embeds && m.embeds.length > 0)) continue;
 
-        const cleaned = sanitizeText(m.content, 600);
+        const cleaned = fixText(m.content, 600);
         if (!cleaned) continue;
 
         const label = (m.member?.displayName || m.author.username) + ': ' + cleaned;
@@ -96,9 +124,17 @@ for (const file of commandFiles) {
         console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
     }
 }
+/*
+ * this section dynamically loads all the command files from the commands directory, 
+ * reads each file, checks if it has the necessary data and execute properties, 
+ * and then registers it with the client.commands collection.
+ */
 
-// gemini model initialization
-// chore: add rate limiting and better prompt injection prevention
+/*
+ * gemini model initialization
+ * chore: add rate limiting and better prompt injection prevention
+ */
+
 const genAI = new GoogleGenerativeAI(process.env.API_KEY);
 const flashModel = genAI.getGenerativeModel({ 
     model: "gemini-2.5-flash",
@@ -166,6 +202,12 @@ client.on('ready', () => {
     }, 300000); // 5 min interval b/w heartbeats
 });
 
+/*
+ * a simple heartbeat check to monitor the ineffa's connection to siscord.
+ * it logs the websocket ping every 5 minutes.
+ * if the ping is unusually high, it logs a warning, which could indicate network issues.
+ */
+
 // message handling
 client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
@@ -184,10 +226,15 @@ client.on('messageCreate', async (message) => {
         const fetchedMessages = await message.channel.messages.fetch({ limit: client.conversationFetchLimit });
         const allMessages = [...fetchedMessages.values()].reverse();
 
+        /*
+         * this regular expression /<@!?\d+>/g is used to remove user mentions from the message content.
+         * it looks for the pattern of a discord mention, which is like <@1234567890> or <@!1234567890>.
+         */
+        
         const currentMessageContent = message.content.replace(/<@!?\d+>/g, '').trim();
         const activeUserNickname = message.author.username;
 
-        const validHistory = trimmedHistory(allMessages, 6, 2000);
+        const validHistory = trimHistory(allMessages, 6, 2000);
 
         // start typing indicator and keep it alive while we await the model
         message.channel.sendTyping().catch(() => {});
@@ -201,6 +248,12 @@ client.on('messageCreate', async (message) => {
         const result = await chat.sendMessage(`${activeUserNickname}: ${currentMessageContent}`);
         let text = result.response.text();
 
+        /*
+         * this regex is designed to strip out any internal "thought" or "tool_code" blocks that the gemini model might include in its response.
+         * these are useful for debugging but aren't meant to be seen by the user.
+         * it looks for lines starting with "tool_code" or "thought" and removes everything until the next double newline or the end of the string.
+         */
+        
         text = text.replace(/(?<=^|\n)(tool_code|thought)[\s\S]*?(?=\n\n|$)/gi, '');
 
         const lines = text.split('\n');
@@ -208,14 +261,35 @@ client.on('messageCreate', async (message) => {
             const trimmed = line.trim();
             if (trimmed === "") return true;
 
+            /*
+             * this regex, /^[^:\n]+:\s/i, checks if a line looks like a label (e.g., "username: some message").
+             * it checks for any characters that are not a colon or a newline, followed by a colon and a space.
+             * this is used to remove any conversational prefixes that the model might add.
+             */
+            
             const isLabel = /^[^:\n]+:\s/i.test(trimmed);
+
+            /*
+            // this regex, /Ineffa['’]s conclusion:|Task completed|Note:/i, checks for specific phrases that are part of ineffa's persona.
+            // we want to keep these lines, even if they look like labels.
+            */
+            
             const isPersonaMarker = /Ineffa['’]s conclusion:|Task completed|Note:/i.test(trimmed);
 
             return !isLabel || isPersonaMarker;
         });
 
         text = cleanedLines.join('\n').trim();
+
+        // this regex, /^(Ineffa|[\w\s]+):\s/i, is a final check to remove any "Ineffa:" or "Username:" prefix at the very beginning of the response.
+        
         text = text.replace(/^(Ineffa|[\w\s]+):\s/i, '');
+
+        /*
+         * and this one, /\n{3,}/g, collapses three or more newlines into just two.
+         * this keeps the formatting clean and prevents large empty spaces in the response.
+         */
+
         text = text.replace(/\n{3,}/g, '\n\n').trim();
 
         if (!text) {
@@ -277,14 +351,38 @@ client.on('interactionCreate', async interaction => {
     }
 });
 
+/*
+ * this part of the code handles slash commands.
+ * it uses deferred reply strategy to prevent the interactions from timing out.
+ * 
+ * if a command takes a while to execute, discord might think it has failed.
+ * to avoid this, ineffa immediately acknowledges the command with a "thinking..." message,
+ * and then sends the actual response later using editReply.
+ * 
+ * the short delay before deferring helps quick commands feel more responsive.
+ */
+
 // automod event handling
 client.on('autoModerationActionExecution', async (execution) => {
     console.log(`AutoMod rule triggered by ${execution.user.tag} in #${execution.channel.name}. Action: ${execution.action.type}.`);
+    
+    /*
+     * this event listener is for discord's built-in automod.
+     * when automod takes an action (like deleting a message or timing out a user), this code will log that the action was taken.
+     * it's useful to keep track of moderation activity.
+     */
+
 });
 
 // shutdown handling
 process.on('SIGINT', () => shutdown(client, activityInterval));
 process.on('SIGTERM', () => shutdown(client, activityInterval));
+
+/*
+ * these handlers ensure that the bot shuts down gracefully when the process is terminated.
+ * for example, when you stop the bot with Ctrl+C in the terminal (which sends a SIGINT signal).
+ * The shutdown function in utils.js will be called to handle cleanup tasks, like disconnecting from discord and stopping any ongoing processes.
+ */
 
 // bot login
 client.login(process.env.TOKEN);
