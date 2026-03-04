@@ -7,29 +7,28 @@ const timestampsFilePath = './command_timestamps.json';
  */
 
 function splitMessage(text, maxLength = 2000) {
-    if (text.length <= maxLength) {
-        return [text];
-    }
+    if (text.length <= maxLength) return [text];
 
     const messageParts = [];
     let currentPart = '';
-    
     const lines = text.split('\n');
 
-    for (const line of lines) {
+    for (let line of lines) {
+        while (line.length > maxLength) {
+            const chunk = line.substring(0, maxLength);
+            messageParts.push(chunk);
+            line = line.substring(maxLength);
+        }
+
         if (currentPart.length + line.length + 1 > maxLength) {
             messageParts.push(currentPart);
             currentPart = '';
         }
-
         currentPart += (currentPart.length > 0 ? '\n' : '') + line;
     }
 
-    if (currentPart.length > 0) {
-        messageParts.push(currentPart);
-    }
-
-    return messageParts
+    if (currentPart.length > 0) messageParts.push(currentPart);
+    return messageParts;
 }
 
 /*
@@ -136,7 +135,14 @@ function formatDuration(ms) {
 function shutdown(client, activityInterval) {
     if (activityInterval) clearInterval(activityInterval);
     console.log("Shutting ineffa down...");
+    
+    const forceExit = setTimeout(() => {
+        console.log("Graceful shutdown failed, forcing exit.");
+        process.exit(1);
+    }, 5000);
+
     client.destroy();
+    clearTimeout(forceExit);
     process.exit(0);
 }
 

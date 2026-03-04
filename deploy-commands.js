@@ -34,7 +34,7 @@ const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
 (async() => {
     try {
         console.log(`Started refreshing ${commands.length} application commands.`);
-
+        
         /*
          * the rest.put() method sends a put request to application commands route, which effectively overwrites all existing slash commands for this client id with the new set of commands.
          * "node deploy-commands.js" is how you register new commands and update existing ones.
@@ -45,7 +45,7 @@ const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
             Routes.applicationCommands(process.env.CLIENT_ID),
             { body: commands },
         );
-
+        
         console.log(`Successfully reloaded ${data.length} application commands`);
     } catch (error) {
         console.error(error);

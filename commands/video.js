@@ -6,13 +6,13 @@ const { detectKeyType } = require('../utils');
 // command module
 async function generateVideo(prompt) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/veo-3.0-generate-preview:generateVideo?key=${process.env.API_KEY}`;
-
+    
     /*
      * this function sends a request to the google generative language api to generate a video.
      * the prompt, number of videos, and resolution are specified in the request body.
      * if successful, returns the uri of the generated video.
      */
-
+    
     try {
         const response = await fetch(url, {
             method: "POST",
@@ -23,14 +23,14 @@ async function generateVideo(prompt) {
                 resolution: "720p"
             })
         });
-
+        
         const data = await response.json();
-
+        
         if (!data.videos || !data.videos[0].videoUri) {
             console.error("Veo API response:", data);
             return null;
         }
-
+        
         return data.videos[0].videoUri;
     } catch (err) {
         console.error("Video fetch error:", err);
@@ -46,14 +46,14 @@ module.exports = {
             option.setName('prompt')
                 .setDescription('Describe the video you want Ineffa to create.')
                 .setRequired(true)),
-    
+                
     async execute (interaction) {
         try {
                 await interaction.deferReply();
-        
+                
                 const prompt = interaction.options.getString('prompt');
                 const keyType = detectKeyType(process.env.API_KEY);
-
+                
                 /*
                  * similar to image command, this checks api key type.
                  * veo video generation model is only available with vertex ai service accounts.
@@ -66,9 +66,9 @@ module.exports = {
                     );
                     return;
                 }
-
+                
                 const videoUrl = await generateVideo(prompt);
-        
+                
                 if (videoUrl) {
                     await interaction.editReply({
                         content: `Ineffa’s creation: *${prompt}*\n${videoUrl}`

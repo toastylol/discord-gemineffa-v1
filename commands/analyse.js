@@ -1,12 +1,12 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { getFileType } = require("../utils");
-
-    /* 
+    
+    /*
      * this async function fetches a file from a given url and encodes it into a base64 string.
      * base64 encoding is necessary to embed the file data directly into the request sent to the gemini api, as the api expects the file content in this format.
      * it first fetches the file, then reads the response body as an arraybuffer and finally converts this buffer into a base64 string.
      */
-
+    
 async function fetchAndEncodeFile(url) {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`Failed to fetch file: ${res.statusText}`);
@@ -14,12 +14,12 @@ async function fetchAndEncodeFile(url) {
     return Buffer.from(buffer).toString("base64");
 }
 
-// command module 
+// command module
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('analyse')
         .setDescription('Analyses a provided file based on your task.')
-        .addAttachmentOption(option => 
+        .addAttachmentOption(option =>
             option.setName('file')
                 .setDescription('The file you want Ineffa to analyse.')
                 .setRequired(true))
@@ -27,16 +27,16 @@ module.exports = {
             option.setName('task')
                 .setDescription('The analysis task.')
                 .setRequired(true)),
-
+            
     async execute(interaction) {
         try {
             await interaction.deferReply();
-
+            
             const file = interaction.options.getAttachment('file');
             const task = interaction.options.getString('task');
-
+            
             const base64Data = await fetchAndEncodeFile(file.url);
-
+            
             const proModel = interaction.client.proModel;
             const result = await proModel.generateContent([
                 task,
@@ -47,9 +47,9 @@ module.exports = {
                     },
                 }
             ]);
-
+            
             const responseText = result.response.text();
-
+            
             /*
              * the response from the ai model can be very long and discord embeds have a character limit of 4096 for the description field.
              * to handle long responses, this splits the text into chunks of 4096 characters. then, each chunk will then be sent as a separate embed with a maximum of 10 embeds.
@@ -96,7 +96,7 @@ module.exports = {
              * since discord doesn't natively embed video files from urls in the same way it does for images, we re-upload the video as a separate message.
              * this ensures the user can see and play the video that was analyzed directly in the chat.
              */
-
+            
            if (getFileType(file) === "video") {
                 try {
                     await interaction.followUp({
@@ -108,16 +108,15 @@ module.exports = {
                     await interaction.followUp({ content: 'The analysis was successful, but I was unable to re-upload the original video file.', ephemeral: true });
                 }
             }
-
         } catch (error) {
             console.error("File analysis error:", error);
-
+            
             const errorEmbed = new EmbedBuilder()
                 .setColor("#ff0000")
                 .setTitle("File Analysis Error")
                 .setDescription("Ineffa could not analyse the file. The file type may not be supported (supported types are PDF, TXT, DOCX, PNG, JPEG, WebP, WAV, MP3, FLAC, MP4 and MOV) or an internal error occured.")
                 .setTimestamp();
-
+            
             await interaction.editReply({ embeds: [errorEmbed] });
         }
     }

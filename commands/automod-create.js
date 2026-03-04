@@ -1,14 +1,14 @@
-const { 
-    SlashCommandBuilder, 
-    PermissionsBitField, 
-    AutoModerationRuleEventType, 
-    AutoModerationRuleTriggerType, 
-    AutoModerationActionType 
+const {
+    SlashCommandBuilder,
+    PermissionsBitField,
+    AutoModerationRuleEventType,
+    AutoModerationRuleTriggerType,
+    AutoModerationActionType
 } = require('discord.js');
 
 // command module
 module.exports = {
-    data: new SlashCommandBuilder() 
+    data: new SlashCommandBuilder()
         .setName('automod-create')
         .setDescription('Creates an AutoMod rule with Ineffa based on selected type.')
         .addSubcommand(subcommand =>
@@ -19,7 +19,7 @@ module.exports = {
                     option.setName('words')
                         .setDescription('The keywords to block, seperated by commas.')
                         .setRequired(true)))
-
+                    
         .addSubcommand(subcommand =>
             subcommand
                 .setName('mentionspam')
@@ -30,13 +30,13 @@ module.exports = {
                         .setRequired(true)
                         .setMinValue(1)
                         .setMaxValue(50))), // discord's limit is 50
-
+                    
         async execute(interaction) {
             try {
                 
                 /*
                  * before this command does anything, perform a check to see if the user who used the command has the 'manage guild' permission.
-                 * this is a security check to ensure that only authorized users can create or modify automod rules. 
+                 * this is a security check to ensure that only authorized users can create or modify automod rules.
                  * if they don't have the permission, ineffa sends an ephemeral message and stops command execution.
                  */
                 
@@ -46,11 +46,11 @@ module.exports = {
                         ephemeral: true,
                     });
                 }
-
+                
                 await interaction.deferReply({ ephemeral: true });
-
+                
                 const subcommand = interaction.options.getSubcommand();
-
+                
                 switch (subcommand) {
                     case 'keyword': {
                         
@@ -63,14 +63,14 @@ module.exports = {
                          * the `keywordfilter` in `triggermetadata` is set to the array of keywords provided by the user.
                          * if a message contains any of these keywords, the `blockmessage` action is taken and a custom message is sent to inform the user why their message was blocked.
                          */
-
+                        
                         const keywords = interaction.options.getString('words').split(',').map(word =>
                         word.trim()).filter(Boolean);
-
+                        
                         if (keywords.length === 0) {
                             return interaction.editReply('Input Rejected. PLease provide at least one valid keyword.');
                         }
-
+                        
                         await interaction.guild.autoModerationRules.create({
                             name: `Block Keywords (${keywords.slice(0, 2).join(',')}...) - by ${interaction.client.user.username}`,
                             enabled: true,
@@ -82,21 +82,21 @@ module.exports = {
                                 metadata: { customMessage: 'This message was blocked by Ineffa for containing a prohibited word. Powered by AutoMod. '}
                             }],
                         });
-
+                        
                         await interaction.editReply(`AutoMod rule enabled. Messages containing the following words: "${keywords}" will now be blocked.`);
                         break;
                     }
-
+                    
                     case 'mentionspam': {
                         const threshold = interaction.options.getInteger('threshold');
-
+                        
                         /*
                          * this creates an automod rule specifically for mention spam.
                          * it's triggered when a message is sent.
                          * the `mentionspam` trigger type activates when the number of unique user and role mentions in a single message exceeds the `mentionTotalLimit` (the threshold set by the user).
                          * if triggered, it blocks the message and sends a custom explanation.
                         */
-
+                        
                         await interaction.guild.autoModerationRules.create({
                             name: `Block Mention Spam (>${threshold}) - by ${interaction.client.user.username}`,
                             enabled: true,
@@ -108,7 +108,7 @@ module.exports = {
                                 metadata: { customMessage: 'This message was blocked by Ineffa for containing excessive mention spam. Powered by AutoMod. '}
                             }],
                         });
-
+                        
                         await interaction.editReply(`AutoMod rule enabled. Messages with more than **${threshold}** unique mentions will now be blocked.`);
                         break;
                     }

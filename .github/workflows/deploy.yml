@@ -1,36 +1,28 @@
 # this is a github actions workflow file that is designed to deploy Ineffa to a google cloud platform (gcp) instance.
 # while it is configured for gcp, the underlying principles and structure can be adapted for other cloud providers.
 
-# the name of the workflow. this is what you'll see in the "actions" tab of your github repo.
 name: Deploy Ineffa
 
-# defines the permissions granted to the github_token for this workflow.
-# this is best practice in terms of security to ensure the workflow only has the access it needs.
 permissions:
-  contents: read  # allows the workflow to read the repo's contents.
-  pull-requests: write # allows the workflow to write to pull requests, useful for adding comments or labels.
+  contents: read
+  pull-requests: write
 
 # specifies the trigger for this workflow.
 on:
     push:
-        # the workflow will only run for pushes to the 'main' branch.
         branches: [ main ]
 
-# defines the jobs that will run as part of this workflow.
 jobs:
     deploy:
-        # specifies the runner environment.
         runs-on: ubuntu-latest
         steps:
-            # this step checks out your repository's code, so the workflow can access it.
             - name: Checkout Code
-              uses: actions/checkout@v4 # uses a pre-built action from the github marketplace.
+              uses: actions/checkout@v4 # pre-built action from the github marketplace.
 
-            # this step connects to a remote server via ssh and executes a deployment script.
             - name: SSH and Deploy
               uses: appleboy/ssh-action@v1.0.3 # a community-built action for ssh.
               with:
-                # the following are parameters for the ssh-action, using secrets for security.
+                # the following are parameters for the ssh-action
                 host: ${{ secrets.IP }}       # the ip of the gcp instance.
                 username: ${{ secrets.User }}  # the username for the ssh connection.
                 key: ${{ secrets.SSH_KEY }}     # the private ssh key for authentication.

@@ -12,15 +12,15 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('devbadge')
         .setDescription('A command to claim the active dev badge. (Deprecated)'),
-        
+
     async execute(interaction) {
         try {
                 await interaction.deferReply({ ephemeral: true });
-        
+                
                 const userID = interaction.user.id;
                 const timestamps = readTimestamps();
                 const lastTimestamp = timestamps[userID];
-        
+                
                 const embed = new EmbedBuilder()
                     .setColor('#e62020')
                     .setTitle('Active Developer Badge Eligibility')
@@ -31,22 +31,22 @@ module.exports = {
                         value: 'Visit the [support page](https://support-dev.discord.com/hc/en-us/articles/10113997751447-Active-Developer-Badge).'
                     })
                     .setTimestamp();
-        
+                    
                 if (lastTimestamp) {
                     embed.addFields({
                         name: 'Last Used',
                         value: `You last ran this command <t:${lastTimestamp}:R>.`
                     });
                 }
-        
+                
                 await interaction.editReply({
                     embeds: [embed],
                     ephemeral: true
                 });
-        
+                
                 timestamps[userID] = Math.floor(Date.now() / 1000);
                 writeTimestamps(timestamps);
-        
+                
         } catch (error) {
             console.error('Error handling /devbadge command:', error);
             if (interaction.deferred || interaction.replied) {

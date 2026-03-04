@@ -14,7 +14,7 @@ module.exports = {
         const flashModel = interaction.client.flashModel;
         try {
             await interaction.deferReply();
-
+            
             const query = interaction.options.getString('query');
             
             /*
@@ -34,14 +34,14 @@ module.exports = {
             if (text.length > 1500) {
                 text = text.slice(0, 1500) + '\u2026';
             }
-
+            
             const embed = new EmbedBuilder()
                 .setColor("Random")
                 .setTitle(`Search results for ${query}`)
                 .setDescription(text)
                 .setFooter({ text: 'Answer provided by Ineffa with Google Search' })
                 .setTimestamp();
-
+                
                 await interaction.editReply({ embeds: [embed] });
             } catch (error) {
                 console.error('Error with Gemini API search:', error);

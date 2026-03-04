@@ -7,14 +7,14 @@ module.exports = {
         .setDescription(`Replies with Pong! and shows Ineffa's latency.`),
 
     async execute(interaction) {
-        const sent = await interaction.reply({ 
-            content: "Calculating latency...", 
-            fetchReply: true 
+        const sent = await interaction.reply({
+            content: "Calculating latency...",
+            fetchReply: true
         });
-
+        
         const ping = sent.createdTimestamp - interaction.createdTimestamp;
         const apiPing = Math.round(interaction.client.ws.ping);
-
+        
         /*
          * ineffa calculates two different latency values here:
          * 
@@ -36,7 +36,7 @@ module.exports = {
             )
             .setFooter({ text: "Operational check complete." })
             .setTimestamp();
-
+            
             await interaction.editReply({ content: "Pong!", embeds: [embed] });
     },
 };

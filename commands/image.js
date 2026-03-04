@@ -12,20 +12,20 @@ async function generateImage(prompt) {
         const imageModel = genAI.getGenerativeModel({
             model: "gemini-2.5-flash-image-preview",
         });
-
+        
         const result = await imageModel.generateContent(prompt, {
             generationConfig: { responseModalities: ["IMAGE"] },
         });
-
+        
         const imageData = result.response?.candidates?.[0]?.content?.parts?.find(
             (part) => part.inlineData
         )?.inlineData;
-
+        
         if (!imageData) {
             console.error("No image data returned:", result);
             return null;
         }
-
+        
         return Buffer.from(imageData.data, "base64");
     } catch (error) {
         console.error("Image generation error:", error);
@@ -45,12 +45,12 @@ module.exports = {
     async execute(interaction) {
         try {
                 await interaction.deferReply();
-
+                
                 const rawPrompt = interaction.options.getString('prompt');
                 const prompt = rawPrompt.replace(/\s+/g, ' ').trim().slice(0, 500);
                 const imgBuffer = await generateImage(prompt);
                 const keyType = detectKeyType(process.env.API_KEY);
-
+                
                 /*
                  * the function checks whether the provided api key is a standard ai studio key or a more powerful vertex ai service account key.
                  * image and video generation models are currently only available to vertex ai users.

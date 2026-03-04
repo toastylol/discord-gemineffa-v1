@@ -13,7 +13,7 @@ module.exports = {
                     { name: 'Enable', value: 'enable' },
                     { name: 'Disable', value: 'disable' }
                 )),
-
+                
     async execute(interaction) {
         try {
             
@@ -28,23 +28,23 @@ module.exports = {
                     ephemeral: true,
                 });
             }
-
+            
             await interaction.deferReply();
-
+            
             const statusChoice = interaction.options.getString('status');
             const shouldEnable = statusChoice === 'enable';
-
+            
             /*
              * fetching all existing automod rules in the server.
              * returns a collection of automoderation rule objects.
              */
-
+            
             const rules = await interaction.guild.autoModerationRules.fetch();
             
             if (rules.size === 0) {
                 return interaction.editReply('No AutoMod rules were found in this server to update.');
             }
-
+            
             let updatedCount = 0;
             for (const rule of rules.values()) {
                 
@@ -59,7 +59,7 @@ module.exports = {
             
             const actionText = shouldEnable ? 'Enabled' : 'Disabled';
             await interaction.editReply(`**${updatedCount}** AutoMod rule(s) have been successfully **${actionText}**.`);
-
+            
         } catch (error) {
             console.error('Failed to toggle AutoMod rules:', error);
             

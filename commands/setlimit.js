@@ -11,7 +11,7 @@ module.exports = {
                 .setRequired(true)
                 .setMinValue(1)
                 .setMaxValue(100)), // max limit allowed by discord
-    
+                
     async execute(interaction) {
         
         /*
@@ -22,11 +22,11 @@ module.exports = {
         if (interaction.user.id !== process.env.ADMIN_USER_ID) {
             return interaction.reply(`Directive denied. You lack the necessary permissions to execute this command. Ineffa recommends contacting <@${process.env.ADMIN_USER_ID}> to use it.`);
         }
-
+        
         const newLimit = interaction.options.getInteger('limit');
         
         interaction.client.conversationFetchLimit = newLimit;
-
+        
         await interaction.reply({
             content: `System log parameters adjusted. Capacity set to **${newLimit}** messages.`,
         });

@@ -22,7 +22,7 @@ module.exports = {
     error_file: "./logs/error.log",
     merge_logs: true,
     log_date_format: "DD-MM-YYYY HH:mm:ss",
-
+    
     env: {
       NODE_ENV: "production",
     }
