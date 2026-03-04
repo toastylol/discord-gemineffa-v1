@@ -224,7 +224,6 @@ client.on('messageCreate', async function ineffaChatHandler(message) {
     
     if (!isDirectMention && !isReplyToBot) return;
     
-    
     // per-user rate limiting prevents spam and protects the api quota by enforcing a 15-second delay between prompts for each user.
     
     const userId = message.author.id;
