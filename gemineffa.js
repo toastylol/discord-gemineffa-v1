@@ -29,7 +29,7 @@ console.error = (...args) => {
 
 // utility functions
 const { splitMessage, shutdown } = require('./utils.js');
-const { Client, Collection, IntentsBitField, EmbedBuilder, ActivityType, PermissionsBitField, AutoModerationRuleEventType, AutoModerationRuleTriggerType, AutoModerationActionType } = require('discord.js');
+const { Client, Collection, IntentsBitField, EmbedBuilder, ActivityType, PermissionsBitField, AutoModerationRuleEventType, AutoModerationRuleTriggerType, AutoModerationActionType, Presence } = require('discord.js');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { error } = require('console');
 
@@ -158,20 +158,104 @@ client.on('ready', () => {
         const memberCount = client.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0);
         
         return [
-        { name: 'Playing Genshin Impact', type: ActivityType.Streaming, url: `${process.env.ACTIVITY_URL}`, state: 'Assisting travelers across Teyvat...'},
-        { name: `Watching over ${serverCount} servers`, type: ActivityType.Watching, state: `Managing ${memberCount} members with precision and care...`},
-        { name: 'Performing Maid Duties', type: ActivityType.Playing, state: 'Polishing furniture, sweeping floors and dusting...'},
-        { name: 'Competing in Cook-offs!', type: ActivityType.Competing, state: 'Prepping meals and serving food with flair!'},
-        { name: 'Performing Household Maintenence', type: ActivityType.Watching, state: 'Repairing damages, maintaining tools and checking for safety hazards...'},
-        { name: 'Tracking Schedules', type: ActivityType.Watching, state: 'Keeping track of tasks, appointments and routines...'},
-        { name: 'Caretaking', type: ActivityType.Playing, state: 'Assisting with daily needs, carrying supplies and aiding with physical tasks...'},
-        { name: 'Listening to Battle Comms', type: ActivityType.Listening, state: 'Generating protective barriers for allies...'},
-        { name: 'Protecting with Lunar-Charged', type: ActivityType.Playing, state: 'Amplifying damage...'},
-        { name: 'Playing a Support Role', type: ActivityType.Playing, state: 'Assisting teammates with off-field lunar-charged reactions...'},
-        { name: 'Maintaining Birgitta Unit', type: ActivityType.Watching, state: 'Summoning auxillary mechanical support for combat...'},
-        { name: 'Noting Directives', type: ActivityType.Listening, state: 'Delivering information methodically...'},
-        { name: 'Watching and Observing', type: ActivityType.Watching, state: 'Monitoring surroundings, scanning for anomalies and delivering situational updates...'},
-        { name: `Looking after ${process.env.CREATOR_NAME}`, type: ActivityType.Playing, state: 'Supporting family with quiet reliability...'},
+            {
+                name: 'Playing Genshin Impact',
+                type: ActivityType.Streaming,
+                url: `${process.env.ACTIVITY_URL}`,
+                state: 'Assisting travelers across Teyvat...',
+                presence: 'online'
+            },
+            
+            {
+                name: `Watching over ${serverCount} servers`,
+                type: ActivityType.Watching,
+                state: `Managing ${memberCount} members with precision and care...`,
+                presence: 'idle'
+            },
+            
+            {
+                name: 'Performing Maid Duties',
+                type: ActivityType.Playing,
+                state: 'Polishing furniture, sweeping floors and dusting...',
+                presence: 'dnd'
+            },
+            
+            {
+                name: 'Competing in Cook-offs!',
+                type: ActivityType.Competing,
+                state: 'Prepping meals and serving food with flair!',
+                presence: 'dnd'
+            },
+            
+            {
+                name: 'Performing Household Maintenence',
+                type: ActivityType.Watching,
+                state: 'Repairing damages, maintaining tools and checking for safety hazards...',
+                presence: 'idle'
+            },
+            
+            {
+                name: 'Tracking Schedules',
+                type: ActivityType.Watching,
+                state: 'Keeping track of tasks, appointments and routines...',
+                presence: 'dnd'
+            },
+            
+            {
+                name: 'Caretaking',
+                type: ActivityType.Playing,
+                state: 'Assisting with daily needs, carrying supplies and aiding with physical tasks...',
+                presence: 'online'
+            },
+            
+            {
+                name: 'Listening to Battle Comms',
+                type: ActivityType.Listening,
+                state: 'Generating protective barriers for allies...',
+                presence: 'dnd'
+            },
+            
+            {
+                name: 'Protecting with Lunar-Charged',
+                type: ActivityType.Playing,
+                state: 'Amplifying damage...',
+                presence: 'online'
+            },
+            
+            {
+                name: 'Playing a Support Role',
+                type: ActivityType.Playing,
+                state: 'Assisting teammates with off-field lunar-charged reactions...',
+                presence: 'online'
+            },
+            
+            {
+                name: 'Maintaining Birgitta Unit',
+                type: ActivityType.Watching,
+                state: 'Summoning auxillary mechanical support for combat...',
+                presence: 'idle'
+            },
+            
+            {
+                name: 'Noting Directives',
+                type: ActivityType.Listening,
+                state: 'Delivering information methodically...',
+                presence: 'dnd'
+            },
+            
+            {
+                name: 'Watching and Observing',
+                type: ActivityType.Watching,
+                state: 'Monitoring surroundings, scanning for anomalies and delivering situational updates...',
+                presence: 'idle'
+            },
+            
+            {
+                name: `Looking after ${process.env.CREATOR_NAME}`,
+                type: ActivityType.Playing,
+                state: 'Supporting family with quiet reliability...',
+                presence: 'online'
+            },
         ];
     };
     
@@ -189,13 +273,38 @@ client.on('ready', () => {
         
         client.user.setPresence({
             activities: [newActivity],
-            status: 'online',
+            status: newActivity.presence || 'online',
        });
     }, 60000); // cycles b/w activities every minute
     
-    setInterval(() => {
+    let alert = false;
+    
+    setInterval(async () => {
         const ping = client.ws.ping;
-        console.log(`[HEARTBEAT] Ping: ${ping}ms at ${new Date().toLocaleString()}`);
+        const mem = process.memoryUsage();
+        const heap = mem.heapUsed / 1024 / 1024;
+        const rss = mem.rss / 1024 / 1024;
+        
+        console.log(`[HEARTBEAT] Ping: ${ping}ms | Heap: ${heap.toFixed(2)} MB | RSS: ${rss.toFixed(2)} MB | at ${new Date().toLocaleString()}`);
+        
+        const critMemUsage = 200;
+        
+        if (rss > critMemUsage && !alert) {
+            try {
+                const admin = await client.users.fetch(process.env.ADMIN_USER_ID);
+                await admin.send(`INEFFA CRITICAL ALERT: Memory usage has exceeded ${critMemUsage} MB. Current RSS: ${rss.toFixed(2)} MB. Immediate attention required.`);
+                console.error(`[ALERT] Critical RSS usage reached ${rss.toFixed(2)} MB. ${admin.username} has been notified.`);
+                alert = true;
+            } catch (error) {
+                console.error(`[ERROR] Failed to send critical alert DM:`, error);
+            }
+        }
+        
+        if (rss < 150 && alert) {
+            alert = false;
+            console.log(`[INFO] Memory usage back to normal levels. Current RSS: ${rss.toFixed(2)} MB. Alert status reset.`);
+        }
+        
         if (ping > 1000) {
             console.log(`[WARNING] High ping detected (${ping}ms).`);
         }
@@ -203,9 +312,10 @@ client.on('ready', () => {
 });
 
 /*
- * a simple heartbeat check to monitor the ineffa's connection to discord.
- * it logs the websocket ping every 5 minutes.
- * if the ping is unusually high, it logs a warning, which could indicate network issues.
+ * a simple heartbeat check and memory usage monitor for ineffa's connection to discord.
+ * it logs the websocket ping and checks memory usage every 5 minutes.
+ * if the ping is unusually high, it logs a warning.
+ * if the memory usage is high, it logs a warning or critical message.
  */
 
 // message handling
